@@ -8,6 +8,19 @@ const {
   SlashCommandBuilder
 } = require("discord.js");
 
+const TOKEN = process.env.TOKEN;
+const CLIENT_ID = process.env.CLIENT_ID;
+
+if (!TOKEN) {
+  console.error("❌ TOKEN is missing!");
+  process.exit(1);
+}
+
+if (!CLIENT_ID) {
+  console.error("❌ CLIENT_ID is missing!");
+  process.exit(1);
+}
+
 const client = new Client({
   intents: [GatewayIntentBits.Guilds]
 });
@@ -18,26 +31,29 @@ const commands = [
     .setDescription("Build an OwO Battle team from your available data.")
 ].map(command => command.toJSON());
 
-const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
-
 async function registerCommands() {
   try {
-    console.log("Registering slash commands...");
+    console.log("🔄 Registering slash commands...");
+
+    const rest = new REST({ version: "10" });
+    rest.setToken(TOKEN);
 
     await rest.put(
-      Routes.applicationCommands(process.env.CLIENT_ID),
+      Routes.applicationCommands(CLIENT_ID),
       { body: commands }
     );
 
-    console.log("Slash commands registered.");
+    console.log("✅ Slash commands registered!");
   } catch (error) {
-    console.error(error);
+    console.error("❌ Command registration error:", error);
   }
 }
 
-client.once("ready", () => {
-  console.log(`Logged in as ${client.user.tag}`);
-  console.log("OWO Team Builder is online!");
+client.once("ready", async () => {
+  console.log(`🤖 Logged in as ${client.user.tag}`);
+  console.log("🐾 OWO Team Builder is online!");
+
+  await registerCommands();
 });
 
 client.on("interactionCreate", async interaction => {
@@ -54,5 +70,4 @@ client.on("interactionCreate", async interaction => {
   }
 });
 
-registerCommands();
-client.login(process.env.TOKEN);
+client.login(TOKEN);
